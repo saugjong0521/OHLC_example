@@ -1,9 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { createChart, CandlestickSeries } from "lightweight-charts";
+import Setting from "./Setting";
+import { useThemeStore } from "../store/useThemeStore";
 
 const Chart = () => {
     const chartRef = useRef();
     const [ohlcData, setOhlcData] = useState(null);
+    const [isSettingOpen, setIsSettingOpen] = useState(false);
+    const { theme } = useThemeStore(); // 테마 가져오기
 
     //chart 전체 스타일에 대한 속성 (e.g 수평선, 수직선, 가로세로 text 등)
     useEffect(() => {
@@ -11,13 +15,19 @@ const Chart = () => {
             width: chartRef.current.clientWidth,
             height: 400,
             layout: {
-                background: { color: "#fff" },
-                textColor: "#000",
+                background: { color: theme === 'dark' ? '#1e1e1e' : '#ffffff' },
+                textColor: theme === 'dark' ? '#ffffff' : '#000000',
                 attributionLogo: false,
             },
             grid: {
-                vertLines: { color: "#eee" },
-                horzLines: { color: "#eee" },
+                vertLines: {
+                    color: theme === 'dark' ? '#444' : '#eee',
+                    style: 2 // 2 = Dashed
+                },
+                horzLines: {
+                    color: theme === 'dark' ? '#444' : '#eee',
+                    style: 2
+                },
             },
             timeScale: {
                 timeVisible: true,
@@ -58,6 +68,13 @@ const Chart = () => {
 
         candlestickSeries.setData(data);
 
+        // 차트 왼쪽으로 정렬
+        chart.timeScale().applyOptions({
+            rightOffset: 3,
+        });
+        chart.timeScale().fitContent();
+
+
         chart.subscribeCrosshairMove((param) => {
             if (!param || !param.time || !param.seriesData) {
                 setOhlcData(null);
@@ -77,27 +94,32 @@ const Chart = () => {
         });
 
         return () => chart.remove();
-    }, []);
+    }, [theme]);
 
     return (
         <div className="relative w-full">
             {/* 상단 좌측 가격 표시 display 영역 */}
-            <div className="absolute top-2 left-2 bg-transparent flex gap-[10px] text-[#000] text-sm z-10 font-mono">
-                {ohlcData ? (
+            <div className="absolute top-2 left-2 bg-transparent flex gap-[10px] text-sm z-10 font-mono items-center"
+                style={{ color: theme === 'dark' ? '#fff' : '#000' }}>
+                <button
+                    className="px-1.5 py-2 bg-gray-200 rounded text-xs font-bold"
+                    onClick={() => setIsSettingOpen(true)}
+                >설정</button>
+                {ohlcData && (
                     <>
-                        <div><strong>{ohlcData.time}</strong></div>
                         <div>O:{ohlcData.open.toFixed(4)}</div>
                         <div>H:{ohlcData.high.toFixed(4)}</div>
                         <div>L:{ohlcData.low.toFixed(4)}</div>
                         <div>C:{ohlcData.close.toFixed(4)}</div>
                     </>
-                ) : (
-                    <></>
                 )}
             </div>
 
-            {/* 차트 영역 */}
+            {/* 차트 */}
             <div ref={chartRef} style={{ width: "100%", height: 400 }} />
+
+            {/* 설정 모달 */}
+            {isSettingOpen && <Setting onClose={() => setIsSettingOpen(false)} />}
         </div>
     );
 };

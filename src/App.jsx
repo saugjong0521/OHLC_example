@@ -7,9 +7,11 @@ import Chart from './components/Chart'
 function App() {
 
   return (
-
-    <div className="w-screen h-[500px]">
-      <Chart/>
+    
+    <div className="flex w-screen h-screen items-center justify-center">
+      <div className="w-[900px] h-[400px]">
+        <Chart />
+      </div>
     </div>
 
   )
