@@ -3,13 +3,19 @@ import { createChart, CandlestickSeries } from "lightweight-charts";
 import Setting from "./Setting";
 import { useThemeStore } from "../store/useThemeStore";
 
+
+// npm install --save lightweight-charts
+
+
 const Chart = () => {
     const chartRef = useRef();
     const [ohlcData, setOhlcData] = useState(null);
     const [isSettingOpen, setIsSettingOpen] = useState(false);
     const { theme } = useThemeStore(); // 테마 가져오기
+    const upColor = '#26a69a';
+    const downColor = '#ef5350';
 
-    //chart 전체 스타일에 대한 속성 (e.g 수평선, 수직선, 가로세로 text 등)
+    //  chart 전체 스타일에 대한 속성 (e.g 수평선, 수직선, 가로세로 text 등)
     useEffect(() => {
         const chart = createChart(chartRef.current, {
             width: chartRef.current.clientWidth,
@@ -35,14 +41,10 @@ const Chart = () => {
             },
         });
 
-        //chart 내부 데이터에 대한 속성
+        //  chart 내부 데이터에 대한 속성
         const candlestickSeries = chart.addSeries(CandlestickSeries, {
-            upColor: '#26a69a',
-            downColor: '#ef5350',
-            borderUpColor: '#26a69a',
-            borderDownColor: '#ef5350',
-            wickUpColor: '#26a69a',
-            wickDownColor: '#ef5350',
+            upColor,
+            downColor,
             priceFormat: {
                 type: 'price',
                 precision: 4,
@@ -66,6 +68,7 @@ const Chart = () => {
             { time: '2025-06-12', open: 0.1077, high: 0.1082, low: 0.0996, close: 0.1020 },
         ];
 
+        // 데이터 넣기
         candlestickSeries.setData(data);
 
         // 차트 왼쪽으로 정렬
@@ -96,24 +99,40 @@ const Chart = () => {
         return () => chart.remove();
     }, [theme]);
 
+    const getGreenNRedColor = () => {
+        return ohlcData.close >= ohlcData.open ? upColor : downColor;
+    };
+
+    const getBlackNWhiteColor = () => {
+        return {
+            color: theme === 'dark' ? '#fff' : '#000',
+        };
+    };
+
+
+
     return (
         <div className="relative w-full">
             {/* 상단 좌측 가격 표시 display 영역 */}
             <div className="absolute top-2 left-2 bg-transparent flex gap-[10px] text-sm z-10 font-mono items-center"
-                style={{ color: theme === 'dark' ? '#fff' : '#000' }}>
+                style={getBlackNWhiteColor()}
+            >
                 <button
                     className="px-1.5 py-2 bg-gray-200 rounded text-xs font-bold"
                     onClick={() => setIsSettingOpen(true)}
                 >설정</button>
                 {ohlcData && (
-                    <>
-                        <div>O:{ohlcData.open.toFixed(4)}</div>
-                        <div>H:{ohlcData.high.toFixed(4)}</div>
-                        <div>L:{ohlcData.low.toFixed(4)}</div>
-                        <div>C:{ohlcData.close.toFixed(4)}</div>
-                    </>
+                    <div className="flex flex gap-[10px]"
+                        style={{ color: getGreenNRedColor() }}
+                    >
+                        <div><span style={getBlackNWhiteColor()}>O:</span>{ohlcData.open.toFixed(4)}</div>
+                        <div><span style={getBlackNWhiteColor()}>H:</span>{ohlcData.high.toFixed(4)}</div>
+                        <div><span style={getBlackNWhiteColor()}>L:</span>{ohlcData.low.toFixed(4)}</div>
+                        <div><span style={getBlackNWhiteColor()}>C:</span>{ohlcData.close.toFixed(4)}</div>
+                    </div>
                 )}
             </div>
+
 
             {/* 차트 */}
             <div ref={chartRef} style={{ width: "100%", height: 400 }} />
